@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>PharmaCare - Online Pharmacy</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="container">
+        <div class="nav-left">
+          <h1 class="logo">💊 PharmaCare</h1>
+          <nav class="nav-links">
+            <a href="/">Магазин</a>
+            <a href="/admin" class="admin-link">Админ</a>
+          </nav>
+        </div>
+        <div class="nav-right">
+          <div id="user-status"></div>
+          <a href="/profile.html" class="profile-link">👤</a>
+          <button id="cart-btn" class="cart-btn">🛒 <span id="cart-count">0</span></button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container">
+          <h2>Ваше Здоровье - Наш Приоритет</h2>
+          <p>Заказывайте лекарства и медикаменты онлайн с доставкой на дом</p>
+        </div>
+      </section>
+
+      <section class="shop-section">
+        <div class="container">
+          <div class="shop-header">
+            <h2>Каталог Лекарств</h2>
+            <div class="filters">
+              <input id="search" type="text" placeholder="Поиск лекарств..." class="search-input" />
+              <select id="sort" class="sort-select">
+                <option value="relevance">Сортировка</option>
+                <option value="price-asc">Цена: по возрастанию</option>
+                <option value="price-desc">Цена: по убыванию</option>
+              </select>
+              <input id="minprice" type="number" placeholder="Мин ₽" class="price-input" />
+              <input id="maxprice" type="number" placeholder="Макс ₽" class="price-input" />
+            </div>
+          </div>
+          <div id="products" class="products-grid"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Cart Modal -->
+    <div id="cart-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Корзина</h2>
+          <button class="close-btn">&times;</button>
+        </div>
+        <div id="cart-items" class="cart-items"></div>
+        <div class="cart-footer">
+          <button id="to-checkout" class="checkout-btn">Перейти к оформлению</button>
+          <div id="message" class="message"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

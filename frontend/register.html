@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Регистрация - PharmaCare</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="container">
+        <div class="nav-left">
+          <h1 class="logo">💊 PharmaCare</h1>
+          <nav class="nav-links">
+            <a href="/">Магазин</a>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div class="auth-container">
+        <div class="auth-box">
+          <h2>Создать аккаунт</h2>
+          <form id="register-form">
+            <div class="form-group">
+              <label>ФИО</label>
+              <input type="text" id="name" required />
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="email" required />
+            </div>
+            <div class="form-group">
+              <label>Пароль</label>
+              <input type="password" id="password" required />
+            </div>
+            <button type="submit" class="btn-primary">Зарегистрироваться</button>
+            <div id="error" class="error-msg"></div>
+          </form>
+          <p class="auth-link">Уже есть аккаунт? <a href="/login.html">Войдите</a></p>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      const API_USERS = 'http://localhost:3002'
+      
+      function token(){return localStorage.getItem('token')}
+      function setToken(t){ localStorage.setItem('token',t) }
+      
+      if(token()) window.location.href = '/'
+      
+      document.getElementById('register-form').addEventListener('submit', async (e)=>{
+        e.preventDefault()
+        const name = document.getElementById('name').value
+        const email = document.getElementById('email').value
+        const password = document.getElementById('password').value
+        const res = await fetch(`${API_USERS}/register`,{
+          method:'POST',
+          headers:{'content-type':'application/json'},
+          body:JSON.stringify({email,password,name})
+        })
+        if(res.ok){
+          alert('Регистрация успешна! Пожалуйста, войдите.')
+          window.location.href = '/login.html'
+        } else {
+          document.getElementById('error').innerText = 'Ошибка регистрации'
+        }
+      })
+    </script>
+  </body>
+</html>

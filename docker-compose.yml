@@ -1,0 +1,57 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pharmacy
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL","pg_isready -U postgres || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  product-service:
+    build: ./product-service
+    depends_on: [db]
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/pharmacy
+      - ADMIN_TOKEN=adminsecret
+    ports:
+      - "3001:3001"
+    restart: unless-stopped
+
+  user-service:
+    build: ./user-service
+    depends_on: [db]
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/pharmacy
+      - JWT_SECRET=SUPER_SECRET_KEY
+      - ADMIN_TOKEN=adminsecret
+    ports:
+      - "3002:3002"
+    restart: unless-stopped
+
+  order-service:
+    build: ./order-service
+    depends_on: [db]
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/pharmacy
+    ports:
+      - "3003:3003"
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on: [product-service,user-service,order-service]
+    restart: unless-stopped
+
+volumes:
+  db-data:

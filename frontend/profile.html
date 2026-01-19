@@ -1,0 +1,213 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Личный кабинет - PharmaCare</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="container">
+        <div class="nav-left">
+          <h1 class="logo">💊 PharmaCare</h1>
+          <nav class="nav-links">
+            <a href="/">Магазин</a>
+            <a href="/admin" class="admin-link">Админ</a>
+          </nav>
+        </div>
+        <div class="nav-right">
+          <div id="user-status"></div>
+          <button id="logout-btn" class="btn-logout">Выход</button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div class="profile-container">
+        <div class="profile-sidebar">
+          <div class="profile-card">
+            <h3>👤 Профиль</h3>
+            <div id="profile-info"></div>
+            <button id="edit-profile-btn" class="btn-edit-profile" style="width:100%;margin-top:1rem">✏️ Редактировать</button>
+          </div>
+          <div id="edit-profile-form" class="profile-card" style="display:none;margin-top:1rem">
+            <h3>Редактирование профиля</h3>
+            <input type="text" id="edit-name" placeholder="Имя" style="width:100%;padding:0.8rem;margin-bottom:0.8rem;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box" />
+            <input type="tel" id="edit-phone" placeholder="Телефон: +7 (999) 123-45-67" style="width:100%;padding:0.8rem;margin-bottom:0.8rem;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box" />
+            <textarea id="edit-address" placeholder="Адрес: Город, ул. Пушкина, д. 10, кв. 5" style="width:100%;padding:0.8rem;margin-bottom:0.8rem;border:1px solid #d1d5db;border-radius:6px;box-sizing:border-box;min-height:80px;font-family:inherit"></textarea>
+            <div class="profile-field" style="border-bottom:none;font-size:0.9rem;margin-bottom:0.8rem"><strong>Email (не меняется)</strong> <span id="edit-email-display"></span></div>
+            <button id="save-profile-btn" class="btn-save-profile" style="width:100%;padding:0.8rem;background:#10b981;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;margin-bottom:0.5rem">💾 Сохранить</button>
+            <button id="cancel-profile-btn" style="width:100%;padding:0.8rem;background:#6b7280;color:white;border:none;border-radius:6px;cursor:pointer">Отмена</button>
+          </div>
+        </div>
+
+        <div class="profile-content">
+          <h2>Мои заказы</h2>
+          <div id="orders" class="orders-list"></div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      const API_ORDERS = 'http://localhost:3003'
+      const API_USERS = 'http://localhost:3002'
+      
+      function token(){return localStorage.getItem('token')}
+      
+      if(!token()) window.location.href = '/login.html'
+      
+      document.getElementById('logout-btn').addEventListener('click', ()=>{
+        localStorage.removeItem('token')
+        window.location.href = '/'
+      })
+      
+      let currentUser = null
+      
+      async function loadProfile(){
+        const res = await fetch(`${API_USERS}/me`,{
+          headers:{'Authorization':'Bearer '+token()}
+        })
+        if(res.ok){
+          currentUser = await res.json()
+          document.getElementById('profile-info').innerHTML = `
+            <div class="profile-field"><strong>Email:</strong> ${currentUser.email}</div>
+            <div class="profile-field"><strong>Имя:</strong> ${currentUser.name || 'Не указано'}</div>
+            <div class="profile-field"><strong>Телефон:</strong> ${currentUser.phone || 'Не указано'}</div>
+            <div class="profile-field"><strong>Адрес:</strong> ${currentUser.address || 'Не указано'}</div>
+          `
+          
+          // Заполняем форму редактирования
+          document.getElementById('edit-name').value = currentUser.name || ''
+          document.getElementById('edit-phone').value = currentUser.phone || ''
+          document.getElementById('edit-address').value = currentUser.address || ''
+          document.getElementById('edit-email-display').textContent = currentUser.email
+        }
+      }
+      
+      async function loadOrders(){
+        const res = await fetch(`${API_ORDERS}/orders`)
+        if(res.ok){
+          const allOrders = await res.json()
+          const userToken = token()
+          const user = await fetch(`${API_USERS}/me`,{
+            headers:{'Authorization':'Bearer '+userToken}
+          }).then(r=>r.json())
+          
+          const myOrders = allOrders.filter(o=>o.user_id === user.sub)
+          const container = document.getElementById('orders')
+          
+          if(myOrders.length === 0){
+            container.innerHTML = '<div class="empty-state">У вас нет заказов</div>'
+            return
+          }
+          
+          container.innerHTML = ''
+          myOrders.forEach(order=>{
+            const card = document.createElement('div')
+            card.className = 'order-card'
+            const date = new Date(order.created_at).toLocaleString('ru-RU')
+            const status = order.status === 'pending' ? '⏳ В обработке' : order.status === 'placed' ? '📋 Оформлен' : '✅ Выполнен'
+            const fulfillment = order.fulfillment === 'delivery' ? '🚚 Доставка' : '🏪 Самовывоз'
+            const items = order.items || []
+            const total = items.reduce((sum, item)=>sum + (item.price||0), 0)
+            const totalFormatted = total.toFixed(2)
+            
+            card.innerHTML = `
+              <div class="order-header">
+                <div>
+                  <strong>Заказ #${order.id}</strong>
+                  <div class="order-date">${date}</div>
+                </div>
+                <div class="order-status">${status}</div>
+              </div>
+              <div class="order-details">
+                <div><strong>Способ:</strong> ${fulfillment}</div>
+                <div><strong>Контакт:</strong> ${order.phone || order.email || 'N/A'}</div>
+                <div><strong>Адрес:</strong> ${order.address || 'N/A'}</div>
+              </div>
+              <div class="order-items">
+                <strong>Товары:</strong>
+                ${items.map(item=>`<div class="order-item">💊 ${item.name || 'Товар'} - ${(item.price||0).toFixed(2)} ₽</div>`).join('')}
+                <div class="order-total"><strong>Итого: ${totalFormatted} ₽</strong></div>
+              </div>
+            `
+            container.appendChild(card)
+          })
+        }
+      }
+      
+      // Обработчики редактирования профиля
+      document.getElementById('edit-profile-btn').addEventListener('click', ()=>{
+        document.getElementById('edit-profile-form').style.display = 'block'
+        document.getElementById('edit-profile-btn').style.display = 'none'
+      })
+      
+      document.getElementById('cancel-profile-btn').addEventListener('click', ()=>{
+        document.getElementById('edit-profile-form').style.display = 'none'
+        document.getElementById('edit-profile-btn').style.display = 'block'
+      })
+      
+      document.getElementById('save-profile-btn').addEventListener('click', async ()=>{
+        const name = document.getElementById('edit-name').value.trim()
+        const phone = document.getElementById('edit-phone').value.trim()
+        const address = document.getElementById('edit-address').value.trim()
+        
+        // Валидация
+        if(!name) {
+          alert('⚠️ Введите имя')
+          return
+        }
+        if(!phone) {
+          alert('⚠️ Введите номер телефона')
+          return
+        }
+        if(!address) {
+          alert('⚠️ Введите адрес')
+          return
+        }
+        
+        // Отправляем данные
+        document.getElementById('save-profile-btn').disabled = true
+        document.getElementById('save-profile-btn').textContent = '⏳ Сохранение...'
+        
+        try {
+          const res = await fetch(`${API_USERS}/me`, {
+            method: 'PATCH',
+            headers: {
+              'Authorization': 'Bearer ' + token(),
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({name, phone, address})
+          })
+          
+          if(res.ok){
+            console.log('✅ Профиль обновлён')
+            document.getElementById('edit-profile-form').style.display = 'none'
+            document.getElementById('edit-profile-btn').style.display = 'block'
+            document.getElementById('save-profile-btn').disabled = false
+            document.getElementById('save-profile-btn').textContent = '💾 Сохранить'
+            
+            // Перезагружаем профиль
+            await loadProfile()
+            alert('✅ Профиль успешно обновлён!')
+          } else {
+            const errorText = await res.text()
+            console.error('❌ Ошибка сохранения:', errorText)
+            document.getElementById('save-profile-btn').disabled = false
+            document.getElementById('save-profile-btn').textContent = '💾 Сохранить'
+            alert('❌ Ошибка: ' + (errorText || 'Не удалось сохранить профиль'))
+          }
+        } catch(e){
+          console.error('❌ Ошибка сети:', e)
+          document.getElementById('save-profile-btn').disabled = false
+          document.getElementById('save-profile-btn').textContent = '💾 Сохранить'
+          alert('❌ Ошибка подключения: ' + e.message)
+        }
+      })
+      
+      loadProfile()
+      loadOrders()
+    </script>
+  </body>
+</html>

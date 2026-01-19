@@ -1,0 +1,487 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Админ Панель - Аптека</title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+      .admin-header {
+        background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 4px 15px rgba(0, 102, 204, 0.3);
+      }
+      .admin-header h1 {
+        margin: 0;
+        font-size: 2rem;
+      }
+      .admin-header-controls {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+      }
+      .admin-header-controls input {
+        padding: 0.6rem 1rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.9rem;
+      }
+      .admin-header-controls button {
+        padding: 0.6rem 1.5rem;
+        background: #10b981;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: 0.3s;
+      }
+      .admin-header-controls button:hover {
+        background: #059669;
+        transform: translateY(-2px);
+      }
+
+      .admin-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid #e5e7eb;
+        flex-wrap: wrap;
+      }
+      .admin-tab {
+        padding: 1rem 1.5rem;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #6b7280;
+        border-bottom: 3px solid transparent;
+        transition: 0.3s;
+      }
+      .admin-tab.active {
+        color: #0066cc;
+        border-bottom-color: #0066cc;
+      }
+      .admin-tab:hover {
+        color: #0066cc;
+      }
+
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+
+      .products-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+      }
+      .product-item {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: 0.3s;
+      }
+      .product-item:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        transform: translateY(-2px);
+      }
+      .product-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+      }
+      .product-item-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+      }
+      .product-item-price {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #10b981;
+      }
+      .product-item-desc {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+        line-height: 1.4;
+      }
+      .product-item-actions {
+        display: flex;
+        gap: 0.5rem;
+      }
+      .product-item-actions button {
+        flex: 1;
+        padding: 0.7rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: 0.3s;
+        font-size: 0.9rem;
+      }
+      .btn-edit {
+        background: #3b82f6;
+        color: white;
+      }
+      .btn-edit:hover {
+        background: #2563eb;
+      }
+      .btn-delete {
+        background: #ef4444;
+        color: white;
+      }
+      .btn-delete:hover {
+        background: #dc2626;
+      }
+
+      .add-product-form {
+        background: linear-gradient(135deg, #f0f9ff 0%, #f0fdf4 100%);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 2px dashed #0066cc;
+      }
+      .add-product-form h3 {
+        margin-top: 0;
+        color: #0066cc;
+      }
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+      .form-group {
+        display: flex;
+        flex-direction: column;
+      }
+      .form-group label {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #1f2937;
+        font-size: 0.9rem;
+      }
+      .form-group input,
+      .form-group textarea {
+        padding: 0.8rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-family: inherit;
+        transition: 0.3s;
+      }
+      .form-group input:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: #0066cc;
+        box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+      }
+      .form-group textarea {
+        grid-column: 1 / -1;
+        min-height: 80px;
+        resize: vertical;
+      }
+      .form-actions {
+        display: flex;
+        gap: 1rem;
+        grid-column: 1 / -1;
+      }
+      .btn-add {
+        flex: 1;
+        padding: 1rem;
+        background: #10b981;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 700;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: 0.3s;
+      }
+      .btn-add:hover {
+        background: #059669;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+      }
+      .btn-cancel {
+        padding: 1rem;
+        background: #e5e7eb;
+        color: #1f2937;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.3s;
+      }
+      .btn-cancel:hover {
+        background: #d1d5db;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+      }
+      .modal.active {
+        display: flex;
+      }
+      .modal-content {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      }
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        border-bottom: 2px solid #f3f4f6;
+        padding-bottom: 1rem;
+      }
+      .modal-header h2 {
+        margin: 0;
+        color: #1f2937;
+      }
+      .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #6b7280;
+      }
+
+      .orders-container,
+      .users-container,
+      .pharmacies-container {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      thead {
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        border-bottom: 2px solid #d1d5db;
+      }
+      th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 700;
+        color: #374151;
+      }
+      td {
+        padding: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      tbody tr:hover {
+        background: #f9fafb;
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+      .status-pending {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .status-completed {
+        background: #d1fae5;
+        color: #065f46;
+      }
+
+      .health-panel {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+      .health-item {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background: #f3f4f6;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .health-status.ok {
+        color: #10b981;
+        font-weight: 700;
+      }
+      .health-status.error {
+        color: #ef4444;
+        font-weight: 700;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6b7280;
+      }
+      .empty-state svg {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <h1>💊 Аптека - Админ Панель</h1>
+      <nav>
+        <a href="/">🏪 Магазин</a>
+        <a href="/admin" style="color: #ff6b35;">⚙️ Админ</a>
+      </nav>
+    </header>
+
+    <main style="max-width: 1400px; margin: 0 auto; padding: 2rem;">
+      <div class="admin-header">
+        <div>
+          <h1>Управление Аптекой</h1>
+          <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">Полный контроль над лекарствами, заказами и клиентами</p>
+        </div>
+        <div class="admin-header-controls">
+          <input id="admintoken" placeholder="Админ токен" value="adminsecret" />
+          <button id="refresh">🔄 Обновить</button>
+        </div>
+      </div>
+
+      <div class="admin-tabs">
+        <button class="admin-tab active" data-tab="products">💊 Лекарства</button>
+        <button class="admin-tab" data-tab="orders">📦 Заказы</button>
+        <button class="admin-tab" data-tab="users">👥 Клиенты</button>
+        <button class="admin-tab" data-tab="pharmacies">🏪 Аптеки</button>
+        <button class="admin-tab" data-tab="health">🏥 Статус</button>
+      </div>
+
+      <!-- Products Tab -->
+      <div id="products" class="tab-content active">
+        <div class="add-product-form">
+          <h3>➕ Добавить новое лекарство</h3>
+          <div class="form-grid">
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label>Название</label>
+              <input id="prod-name" type="text" placeholder="Например: Аспирин 500мг" />
+            </div>
+            <div class="form-group">
+              <label>Цена (₽)</label>
+              <input id="prod-price" type="number" placeholder="199.99" step="0.01" min="0" />
+            </div>
+            <div class="form-group">
+              <label>Описание</label>
+              <textarea id="prod-desc" placeholder="Краткое описание лекарства"></textarea>
+            </div>
+            <div class="form-actions">
+              <button class="btn-add" id="add-product">✅ Добавить лекарство</button>
+              <button class="btn-cancel" id="cancel-add-product">Отмена</button>
+            </div>
+          </div>
+        </div>
+        <div id="products-list" class="products-container"></div>
+      </div>
+
+      <!-- Orders Tab -->
+      <div id="orders" class="tab-content">
+        <div id="orders-list" class="orders-container"></div>
+      </div>
+
+      <!-- Users Tab -->
+      <div id="users" class="tab-content">
+        <div id="users-list" class="users-container"></div>
+      </div>
+
+      <!-- Pharmacies Tab -->
+      <div id="pharmacies" class="tab-content">
+        <div style="margin-bottom: 1.5rem;">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Название аптеки</label>
+              <input id="ph-name" type="text" placeholder="Например: Аптека №1" />
+            </div>
+            <div class="form-group">
+              <label>Адрес</label>
+              <input id="ph-address" type="text" placeholder="ул. Пушкина, д. 10" />
+            </div>
+            <div class="form-actions">
+              <button class="btn-add" id="create-pharmacy">✅ Создать аптеку</button>
+            </div>
+          </div>
+        </div>
+        <div id="pharmacies-list" class="pharmacies-container"></div>
+      </div>
+
+      <!-- Health Tab -->
+      <div id="health" class="tab-content">
+        <div class="health-panel">
+          <h2>Статус сервисов</h2>
+          <div id="health-list"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Edit Product Modal -->
+    <div id="editModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Редактировать лекарство</h2>
+          <button class="modal-close" onclick="closeEditModal()">✕</button>
+        </div>
+        <div class="form-grid">
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label>Название</label>
+            <input id="edit-prod-name" type="text" />
+          </div>
+          <div class="form-group">
+            <label>Цена (₽)</label>
+            <input id="edit-prod-price" type="number" step="0.01" min="0" />
+          </div>
+          <div class="form-group">
+            <label>Описание</label>
+            <textarea id="edit-prod-desc"></textarea>
+          </div>
+          <div class="form-actions">
+            <button class="btn-add" id="save-edit-product">💾 Сохранить</button>
+            <button class="btn-cancel" onclick="closeEditModal()">Отмена</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/admin.js"></script>
+  </body>
+</html>
